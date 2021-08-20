@@ -1,0 +1,3 @@
+<!--pages/page1/index.wxml-->
+
+<button bindtap="handleTap" type="primary" style="margin: 400rpx 100rpx;"> 前往人脸录像 </button>
