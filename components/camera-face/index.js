@@ -106,7 +106,6 @@ Component({
       this.setData({ bottomTips: tips.ready })
       // 视频帧回调节流函数
       let fn = throttle((frame) => {
-        console.log(frame.data instanceof ArrayBuffer, frame.width, frame.height)
         // 人脸识别
         wx.faceDetect({
           frameBuffer: frame.data,
@@ -115,7 +114,7 @@ Component({
           enableConf: true,
           enableAngle: true,
           success: (res) => this.processFaceData(res),
-          fail: (err) => console.log('人脸识别失败', err)
+          fail: (err) => this.cancel()
         })
       }, this.properties.throttleFrequency);
 
@@ -127,9 +126,7 @@ Component({
         },
         fail: (err) => {
           console.log('初始人脸识别失败', err)
-          this.setData({
-            bottomTips: ''
-          })
+          this.setData({ bottomTips: '' })
           wx.showToast({ title: '初始人脸识别失败', icon: 'none' })
         }
       })
@@ -149,12 +146,17 @@ Component({
         const isYaw = Math.abs(yaw) <= y;
         const isRoll = Math.abs(roll) <= r;
         if( isGlobal && isPitch && isYaw && isRoll ){
-          console.log('人脸可信，且是正脸');
+          console.log('人脸可信,且是正脸');
+          if(this.data.isRecoding) return;
+          this.setData({ isRecoding: true });
+          this.startRecord(); // 开始录制
         }else {
           console.log('人脸不可信,或者不是正脸');
+          this.cancel()
         }
       }else {
         console.log('获取人脸识别数据失败', res);
+        this.cancel()
       }
     },
 
@@ -165,7 +167,6 @@ Component({
         success: (res) => {
           this.setRecordingTips();
           this.timer = setTimeout(() => {
-            clearInterval(this.interval);
             this.completeRecord()
           }, this.properties.duration)
         },
@@ -173,38 +174,53 @@ Component({
           // 超过30s或页面 onHide 时会结束录像
           this.stop();
         },
-        fail: () => {}
+        fail: () => this.stop()
       })
     },
     // 设置录制中的提示文字和倒计时
     setRecordingTips() {
-      let second = this.properties.duration / 1000;
+      let second = (this.properties.duration / 1000);
       this.interval = setInterval(() => {
-        if (second <= 1) clearInterval(this.interval);
+        console.log('xxxxxx', second);
         this.setData({
           bottomTips: tips.recording + second-- + 's'
         })
+        if (second <= 0) clearInterval(this.interval);
       }, 1000)
     },
 
     // 完成录制
     completeRecord() {
       console.log('完成录制');
-      wx.stopFaceDetect();
-      this.listener.stop();
       this.ctx.stopRecord({
         compressed: this.properties.compressed,
         success: (res) => {
-          this.setData({
-            bottomTips: tips.complete
-          })
+          this.setData({ bottomTips: tips.complete })
           // 向外触发完成录制的事件
           this.triggerEvent('complete', res.tempVideoPath)
         },
-        fail: () => {}
+        fail: () => this.stop(),
+        complete: () => {
+          this.listener.stop();
+          wx.stopFaceDetect();
+          clearInterval(this.interval);
+        }
       })
     },
-    // 用户切入后台/人脸移出等停止使用摄像头
+    // 人脸移出等取消录制
+    cancel() {
+      console.log('取消录制');
+      if(!this.data.isRecoding) return;
+      clearTimeout(this.timer);
+      clearInterval(this.interval);
+      this.ctx.stopRecord({
+        complete: () => {
+          console.log('取消录制成功');
+          this.setData({ bottomTips: tips.ready, isRecoding: false });
+        }
+      });
+    },
+    // 用户切入后台等停止使用摄像头
     stop() {
       console.log('停止录制');
       clearTimeout(this.timer);
@@ -212,9 +228,7 @@ Component({
       if(this.listener) this.listener.stop();
       if(this.ctx) this.ctx.stopRecord();
       wx.stopFaceDetect();
-      this.setData({
-        bottomTips: ''
-      })
+      this.setData({ bottomTips: '', isRecoding: false })
     },
     // 用户不允许使用摄像头
     error(e) {
