@@ -21,10 +21,20 @@ Page({
 
   // 视频录制完成 
   handleComplete(e) {
-    console.log(e)
+    console.log('视频文件路径:', e.detail)
     // e.detail: 视频临时路径
-    this.setData({
-      videoSrc: e.detail
+    this.setData({ videoSrc: e.detail })
+
+    // 打印视频信息文件
+    wx.getFileInfo({
+      filePath: e.detail,
+      success: (res) => {
+        const { size } = res
+        console.log("视频文件大小M:", size / Math.pow(1024, 2));
+      },
+      fail: (err) => {
+        console.log("获取视频文件失败", err);
+      }
     })
   }
 })
