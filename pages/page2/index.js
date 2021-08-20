@@ -1,3 +1,4 @@
+// pages/page2/index.js
 Page({
   onLoad() {},
   data: {
