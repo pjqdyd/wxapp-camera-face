@@ -1,6 +1,15 @@
 // pages/page2/index.js
 Page({
+
+  onHide() {
+    // 在录制中退出后台页面隐藏返回上一页，确保重新进入当前页
+    // 防止在录制中退出后台导致下次重新录制失败 "operateCamera:fail:is stopping"
+    // console.log('页面隐藏')
+    // if (this.isBack) wx.navigateBack()
+  },
+
   onLoad() {},
+
   data: {
     videoSrc: '', // 录制的视频临时路径
   },
@@ -20,7 +29,7 @@ Page({
     wx.navigateBack()
   },
 
-  // 视频录制完成 
+  // 视频录制完成
   handleComplete(e) {
     console.log('视频文件路径:', e.detail)
     // e.detail: 视频临时路径

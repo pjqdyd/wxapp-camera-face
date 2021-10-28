@@ -20,7 +20,7 @@ Component({
       type: Number,
       value: 0.8
     },
-    // 人脸偏移角度正脸数值参考wx.faceDetect文档的res.angleArray 
+    // 人脸偏移角度正脸数值参考wx.faceDetect文档的res.angleArray
     // 越接近0越正脸，包括p仰俯角(pitch点头）, y偏航角（yaw摇头), r翻滚角（roll左右倾）
     faceAngle: {
       type: Object,
@@ -51,7 +51,7 @@ Component({
       type: String,
       value: 'medium'
     },
-    // 闪光灯 auto,on,off,torch 
+    // 闪光灯 auto,on,off,torch
     flash: {
       type: String,
       value: 'off'
@@ -77,7 +77,9 @@ Component({
 
   // 组件的初始数据
   data: {
+    isReading: false, // 是否在准备中
     isRecoding: false, // 是否正在录制中
+    isStopRecoding: false, // 是否正在停止录制中
     bottomTips: '', // 底部提示文字
   },
 
@@ -96,12 +98,28 @@ Component({
 
     // 准备录制
     async readyRecord() {
+      if (this.data.isReading) return
+      this.setData({ isReading: true })
+      wx.showLoading({ title: '加载中..', mask: true })
+      // 检测版本号
       const canUse = checkVersion('2.18.0', () => {
         this.triggerEvent('cannotUse')
       })
-      if(!canUse) return; // 检测版本号
-      const result = await this.start();
-      if (!result || !this.ctx) return;
+      if (!canUse) {
+        wx.hideLoading()
+        this.setData({ isReading: false })
+        return
+      }
+
+      // 启用相机
+      try {
+        const result = await this.start()
+        if (!result || !this.ctx) throw new Error()
+      } catch (e) {
+        wx.hideLoading()
+        this.setData({ isReading: false })
+        return
+      }
       console.log('准备录制')
       this.setData({ bottomTips: tips.ready })
       // 视频帧回调节流函数
@@ -128,6 +146,10 @@ Component({
           console.log('初始人脸识别失败', err)
           this.setData({ bottomTips: '' })
           wx.showToast({ title: '初始人脸识别失败', icon: 'none' })
+        },
+        complete: () => {
+          wx.hideLoading()
+          this.setData({ isReading: false })
         }
       })
     },
@@ -147,7 +169,7 @@ Component({
         const isRoll = Math.abs(roll) <= r;
         if( isGlobal && isPitch && isYaw && isRoll ){
           console.log('人脸可信,且是正脸');
-          if(this.data.isRecoding) return;
+          if (this.data.isRecoding || this.data.isCompleteRecoding) return
           this.setData({ isRecoding: true });
           this.startRecord(); // 开始录制
         }else {
@@ -192,6 +214,7 @@ Component({
     // 完成录制
     completeRecord() {
       console.log('完成录制');
+      this.setData({ isCompleteRecoding: true })
       this.ctx.stopRecord({
         compressed: this.properties.compressed,
         success: (res) => {
@@ -204,13 +227,15 @@ Component({
           this.listener.stop();
           wx.stopFaceDetect();
           clearInterval(this.interval);
+          this.setData({ isCompleteRecoding: false })
         }
       })
     },
     // 人脸移出等取消录制
     cancel() {
       console.log('取消录制');
-      if(!this.data.isRecoding) return;
+      // 如果不在录制中或者正在录制完成中就不能取消
+      if (!this.data.isRecoding || this.data.isCompleteRecoding) return
       clearTimeout(this.timer);
       clearInterval(this.interval);
       this.ctx.stopRecord({
@@ -226,9 +251,11 @@ Component({
       clearTimeout(this.timer);
       clearInterval(this.interval);
       if(this.listener) this.listener.stop();
-      if(this.ctx) this.ctx.stopRecord();
+      if (this.ctx && !this.data.isCompleteRecoding) this.ctx.stopRecord()
       wx.stopFaceDetect();
-      this.setData({ bottomTips: '', isRecoding: false })
+      setTimeout(() => {
+        this.setData({ bottomTips: '', isRecoding: false })
+      }, 500)
     },
     // 用户不允许使用摄像头
     error(e) {
