@@ -46,5 +46,17 @@ Page({
         console.log("获取视频文件失败", err);
       }
     })
+
+    // 上传文件
+    wx.showLoading({ title: '上传中..', mask: true })
+    wx.uploadFile({
+      url: 'http://192.168.15.172:8080/test/upload', //仅为示例，非真实的接口地址
+      filePath: e.detail,
+      name: 'file',
+      complete: (res) => {
+        console.log('上传结果', res)
+        wx.hideLoading()
+      }
+    })
   }
 })
