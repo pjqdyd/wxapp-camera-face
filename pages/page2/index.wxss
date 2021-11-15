@@ -1,6 +1,9 @@
+page {
+  background: #ffffff;
+}
 .page {
   width: 100%;
-  height: 80%;
+  height: 800rpx;
 }
 
 .preview-tips {

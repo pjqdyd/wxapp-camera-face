@@ -1,20 +1,23 @@
 <!--components/camera-face/index.wxml-->
+<!--人脸识别录像组件-->
 <view class="page-body">
-  <camera
-    mode="normal"
-    device-position="{{devicePosition}}"
-    frame-size="{{frameSize}}"
-    resolution="{{resolution}}"
-    flash="{{flash}}"
-    binderror="error"
-    bindstop="stop"
-    class="camera">
-      <cover-view class="cover-img-view">
-        <cover-image class="cover-face-img" src="../../static/images/face.png"></cover-image>
-      </cover-view>
-    </camera>
-    <cover-view class="cover-bottom-view">
-        <cover-view wx:if="{{!bottomTips}}" class="cover-bottom-btn" bindtap="readyRecord">准备录制人脸</cover-view>
-        <cover-view wx:else class="cover-bottom-tips">{{bottomTips}}</cover-view>
-    </cover-view>
+    <view class="camera-box">
+        <camera
+            mode="normal"
+            device-position="{{devicePosition}}"
+            frame-size="{{frameSize}}"
+            resolution="{{resolution}}"
+            flash="{{flash}}"
+            binderror="error"
+            bindstop="stop"
+            class="camera">
+        </camera>
+        <view class="img-view">
+            <image mode="scaleToFill" class="mask-img" src="../../static/images/mask.png"></image>
+        </view>
+    </view>
+    <view class="bottom-view">
+        <view wx:if="{{!bottomTips}}" class="bottom-btn" bindtap="readyRecord">准备录制人脸</view>
+        <view wx:else class="bottom-tips">{{bottomTips}}</view>
+    </view>
 </view>
