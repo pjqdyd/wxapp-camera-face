@@ -34,7 +34,7 @@ Component({
     // 是否压缩视频
     compressed: {
       type: Boolean,
-      value: true
+      value: false
     },
     // 前置或者后置 front,back
     devicePosition: {

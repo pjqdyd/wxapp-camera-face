@@ -1,7 +1,8 @@
 <!-- pages/page2/index.wxml -->
 <view class="page">
   <!-- 父元素一定要有高度 -->
-  <camera-face id="cameraFace" bind:noAuth="handleNoAuth" compressed="{{false}}" bind:complete="handleComplete" bind:cannotUse="handleCannotuse" />
+  <camera-face id="cameraFace" bind:noAuth="handleNoAuth" bind:complete="handleComplete"
+    bind:cannotUse="handleCannotuse" />
 
   <view class="preview-tips">预览视频</view>
   <video wx:if="{{videoSrc}}" class="video" src="{{videoSrc}}"></video>
