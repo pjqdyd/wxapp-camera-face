@@ -202,6 +202,7 @@ Component({
     // 设置录制中的提示文字和倒计时
     setRecordingTips() {
       let second = (this.properties.duration / 1000);
+      if (this.interval) clearInterval(this.interval);
       this.interval = setInterval(() => {
         console.log('xxxxxx', second);
         this.setData({
