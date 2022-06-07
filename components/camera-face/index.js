@@ -18,13 +18,13 @@ Component({
     // 当超过这个可信度且正脸时开始录制人脸, 反之停止录制
     faceCredibility: {
       type: Number,
-      value: 0.8
+      value: 0.5
     },
     // 人脸偏移角度正脸数值参考wx.faceDetect文档的res.angleArray
     // 越接近0越正脸，包括p仰俯角(pitch点头）, y偏航角（yaw摇头), r翻滚角（roll左右倾）
     faceAngle: {
       type: Object,
-      value: { p: 0.2, y: 0.2, r: 0.2 }
+      value: { p: 0.5, y: 0.5, r: 0.5 }
     },
     // 录制视频时长,不能超过30s
     duration: {
